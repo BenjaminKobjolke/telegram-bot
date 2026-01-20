@@ -26,6 +26,7 @@ class Settings:
     poll_timeout: int = CONSTANTS.DEFAULT_POLL_TIMEOUT
     retry_delay: float = CONSTANTS.DEFAULT_RETRY_DELAY
     send_delay: float = CONSTANTS.DEFAULT_SEND_DELAY
+    allowed_user_ids: set[int] | None = None  # None = allow all users
 
     def __post_init__(self) -> None:
         """Validate settings after initialization."""
@@ -66,19 +67,20 @@ def get_settings(env_path: str | Path | None = None) -> Settings:
     parse_mode = os.getenv(CONSTANTS.ENV_PARSE_MODE, CONSTANTS.DEFAULT_PARSE_MODE)
 
     poll_timeout_str = os.getenv(CONSTANTS.ENV_POLL_TIMEOUT, "")
-    poll_timeout = (
-        int(poll_timeout_str) if poll_timeout_str else CONSTANTS.DEFAULT_POLL_TIMEOUT
-    )
+    poll_timeout = int(poll_timeout_str) if poll_timeout_str else CONSTANTS.DEFAULT_POLL_TIMEOUT
 
     retry_delay_str = os.getenv(CONSTANTS.ENV_RETRY_DELAY, "")
-    retry_delay = (
-        float(retry_delay_str) if retry_delay_str else CONSTANTS.DEFAULT_RETRY_DELAY
-    )
+    retry_delay = float(retry_delay_str) if retry_delay_str else CONSTANTS.DEFAULT_RETRY_DELAY
 
     send_delay_str = os.getenv(CONSTANTS.ENV_SEND_DELAY, "")
-    send_delay = (
-        float(send_delay_str) if send_delay_str else CONSTANTS.DEFAULT_SEND_DELAY
-    )
+    send_delay = float(send_delay_str) if send_delay_str else CONSTANTS.DEFAULT_SEND_DELAY
+
+    allowed_user_ids_str = os.getenv(CONSTANTS.ENV_ALLOWED_USER_IDS, "")
+    allowed_user_ids: set[int] | None = None
+    if allowed_user_ids_str.strip():
+        allowed_user_ids = {
+            int(uid.strip()) for uid in allowed_user_ids_str.split(",") if uid.strip()
+        }
 
     return Settings(
         bot_token=bot_token,
@@ -88,4 +90,5 @@ def get_settings(env_path: str | Path | None = None) -> Settings:
         poll_timeout=poll_timeout,
         retry_delay=retry_delay,
         send_delay=send_delay,
+        allowed_user_ids=allowed_user_ids,
     )

@@ -208,10 +208,7 @@ class TelegramBot:
 
         if not TelegramBot._is_polling:
             TelegramBot._is_polling = True
-            if (
-                TelegramBot._polling_thread is None
-                or not TelegramBot._polling_thread.is_alive()
-            ):
+            if TelegramBot._polling_thread is None or not TelegramBot._polling_thread.is_alive():
                 TelegramBot._polling_thread = threading.Thread(
                     target=self._start_polling, daemon=True
                 )
@@ -221,10 +218,7 @@ class TelegramBot:
     def stop_receiving(self) -> None:
         """Stop receiving messages from Telegram."""
         TelegramBot._is_polling = False
-        if (
-            TelegramBot._polling_thread is not None
-            and TelegramBot._polling_thread.is_alive()
-        ):
+        if TelegramBot._polling_thread is not None and TelegramBot._polling_thread.is_alive():
             TelegramBot._polling_thread.join(timeout=5.0)
         print(CONSTANTS.LOG_STOPPED_RECEIVING)
 
@@ -276,10 +270,7 @@ class TelegramBot:
         TelegramBot._stop_flag = True
         self.stop_receiving()
 
-        if (
-            TelegramBot._worker_thread is not None
-            and TelegramBot._worker_thread.is_alive()
-        ):
+        if TelegramBot._worker_thread is not None and TelegramBot._worker_thread.is_alive():
             TelegramBot._worker_thread.join(timeout=5.0)
 
         if TelegramBot._loop is not None:
@@ -317,9 +308,7 @@ class TelegramBot:
                 # Process direct messages first (higher priority)
                 try:
                     message, chat_id = TelegramBot._direct_queue.get_nowait()
-                    TelegramBot._loop.run_until_complete(
-                        self._send_message(message, chat_id)
-                    )
+                    TelegramBot._loop.run_until_complete(self._send_message(message, chat_id))
                 except Exception:
                     # No direct messages, try channel messages
                     try:
@@ -345,6 +334,12 @@ class TelegramBot:
     async def _handle_update(self, update: Update) -> None:
         """Handle an incoming update from Telegram."""
         if update.message:
+            # Filter by allowed user IDs
+            if TelegramBot._settings and TelegramBot._settings.allowed_user_ids:
+                user = update.message.from_user
+                if user and user.id not in TelegramBot._settings.allowed_user_ids:
+                    return  # Silently ignore unauthorized users
+
             for handler in TelegramBot._handler_registry.handlers:
                 try:
                     handler(update)
