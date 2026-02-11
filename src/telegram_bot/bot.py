@@ -265,6 +265,20 @@ class TelegramBot:
         full_url = f"{base}/{path_clean}" if base else path_clean
         TelegramBot._channel_queue.put(full_url)
 
+    def flush(self, timeout: float = 10.0) -> None:
+        """Block until all queued messages have been sent.
+
+        Args:
+            timeout: Maximum time to wait in seconds.
+        """
+        import time as _time
+
+        start = _time.time()
+        while _time.time() - start < timeout:
+            if self._direct_queue.empty() and self._channel_queue.empty():
+                return
+            _time.sleep(0.1)
+
     def shutdown(self) -> None:
         """Shutdown the bot and cleanup resources."""
         TelegramBot._stop_flag = True
