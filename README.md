@@ -90,8 +90,11 @@ bot.initialize()
 bot.send_message_sync("Hello from the bot!")
 
 # Cleanup when done
+bot.flush()
 bot.shutdown()
 ```
+
+> **Important:** Always call `flush()` before `shutdown()` to ensure all queued messages are delivered. `shutdown()` stops the worker threads immediately and any unsent messages in the queue will be lost.
 
 ### With Explicit Settings
 
@@ -105,6 +108,7 @@ bot.initialize(settings=Settings(
 ))
 
 bot.send_message_sync("Hello!")
+bot.flush()
 bot.shutdown()
 ```
 
@@ -135,6 +139,7 @@ try:
     while True:
         time.sleep(1)
 except KeyboardInterrupt:
+    bot.flush()
     bot.shutdown()
 ```
 
@@ -178,6 +183,7 @@ bot.reply_to_user("Hello user!", chat_id=123456789)
 | `send_message_sync(message)` | Send message to channel |
 | `reply_to_user(message, chat_id)` | Send direct message |
 | `send_url_sync(path)` | Send URL with base prefix |
+| `flush()` | Block until all queued messages are sent |
 | `shutdown()` | Cleanup and shutdown |
 
 ### Settings
